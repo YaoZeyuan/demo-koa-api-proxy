@@ -1,6 +1,6 @@
 // src/service/api_redirect.ts
 import * as A1_Ke_Com_ApiHost from "~/src/config/api-host/a1.ke.com";
-import * as Www_Baidu_Com_ApiHost from "~/src/config/api-host/www.baidu.com";
+import * as Ajax_Api_Ke_Com_ApiHost from "~/src/config/api-host/ajax.api.ke.com";
 import Router from "koa-router";
 import Koa from "koa";
 import axios from "axios";
@@ -10,15 +10,15 @@ import cookie from "cookie";
 let http = axios.create()
 
 // 定义前缀类型列表, 方便后续编写匹配函数
-type Type_Prefix = typeof A1_Ke_Com_ApiHost.Const_Prefix | typeof Www_Baidu_Com_ApiHost.Const_Prefix
+type Type_Prefix = typeof A1_Ke_Com_ApiHost.Const_Prefix | typeof Ajax_Api_Ke_Com_ApiHost.Const_Prefix
 
 // 根据前端请求的页面前缀, 判断实际需要转发的host值
 function getApiHost(prefix: Type_Prefix) {
     switch (prefix) {
         case A1_Ke_Com_ApiHost.Const_Prefix:
             return A1_Ke_Com_ApiHost.Const_Host;
-        case Www_Baidu_Com_ApiHost.Const_Prefix:
-            return Www_Baidu_Com_ApiHost.Const_Host;
+        case Ajax_Api_Ke_Com_ApiHost.Const_Prefix:
+            return Ajax_Api_Ke_Com_ApiHost.Const_Host;
         default:
             return A1_Ke_Com_ApiHost.Const_Host;
     }
@@ -53,8 +53,8 @@ let getAsyncRedirectResponse = (prefix: Type_Prefix) => {
             // a1.ke.com需要在header中额外添加token字段, 以进行权限校验
             headers["a1.ke.com-token"] = token;
         }
-        if (prefix === Www_Baidu_Com_ApiHost.Const_Prefix) {
-            // 百度接口不需要转发cookie
+        if (prefix === Ajax_Api_Ke_Com_ApiHost.Const_Prefix) {
+            // 示例接口不需要转发cookie
             // headers["a1.ke.com-token"] = token;
         }
 
@@ -114,20 +114,18 @@ a1_ke_com_ApiRouter.all(
     getAsyncRedirectResponse(A1_Ke_Com_ApiHost.Const_Prefix)
 );
 
-// baidu服务系列接口
-let www_baidu_com_ApiRouter = new Router();
-www_baidu_com_ApiRouter.all(
-    Www_Baidu_Com_ApiHost.Const_Match_Reg,
-    // 获取baidu服务对应的接口处理函数
-    getAsyncRedirectResponse(Www_Baidu_Com_ApiHost.Const_Prefix)
+// ke.com服务系列接口
+let ajax_api_ke_com_ApiRouter = new Router();
+ajax_api_ke_com_ApiRouter.all(
+    Ajax_Api_Ke_Com_ApiHost.Const_Match_Reg,
+    // 获取ke.com服务对应的接口处理函数
+    getAsyncRedirectResponse(Ajax_Api_Ke_Com_ApiHost.Const_Prefix)
 );
 
 // 在总路由中注册a1路由
 totalRouter.use(a1_ke_com_ApiRouter.routes());
-totalRouter.use(www_baidu_com_ApiRouter.routes());
+totalRouter.use(ajax_api_ke_com_ApiRouter.routes());
 
+// 添加路由拦截操作
 // 实际注册中间件服务
-export default (_) => {
-    // 添加路由拦截操作
-    return totalRouter.routes();
-};
+export default totalRouter.routes();

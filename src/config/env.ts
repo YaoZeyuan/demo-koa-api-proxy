@@ -1,1 +1,1 @@
-export default process.env.NODE_ENV as "local" | "dev" | "test" | "pre" | "prod"
+export default (process.env.NODE_ENV ?? 'dev') as "local" | "dev" | "test" | "pre" | "prod"

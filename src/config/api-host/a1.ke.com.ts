@@ -12,6 +12,6 @@ let config: { [key in typeof env]: string } = {
 // 环境下对应的host地址
 export const Const_Host = config[env];
 // 需要转发到a1.ke.com的前端请求特征前缀
-export const Const_Prefix = "/api/a1" as const;
+export const Const_Prefix = "/api/a1/" as const;
 // 需要转发到a1.ke.com的前端请求特征正则匹配表达式
 export const Const_Match_Reg = /^\/api\/a1\/.+/;
