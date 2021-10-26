@@ -53,6 +53,9 @@ import axios from "axios";
 // 用于解析cookie, 方便根据服务端要求配置请求的header头
 import cookie from "cookie";
 
+// 初始化axios实例, 用于转发请求
+let http = axios.create();
+
 // 定义前缀类型列表, 方便后续编写匹配函数
 type Type_Prefix = typeof A1_Ke_Com_ApiHost.Const_Prefix;
 

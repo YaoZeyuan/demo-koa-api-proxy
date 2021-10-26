@@ -1,19 +1,24 @@
 // src/service/api_redirect.ts
 import * as A1_Ke_Com_ApiHost from "~/src/config/api-host/a1.ke.com";
+import * as Www_Baidu_Com_ApiHost from "~/src/config/api-host/www.baidu.com";
 import Router from "koa-router";
 import Koa from "koa";
 import axios from "axios";
 // 用于解析cookie, 方便根据服务端要求配置请求的header头
 import cookie from "cookie";
 
+let http = axios.create()
+
 // 定义前缀类型列表, 方便后续编写匹配函数
-type Type_Prefix = typeof A1_Ke_Com_ApiHost.Const_Prefix;
+type Type_Prefix = typeof A1_Ke_Com_ApiHost.Const_Prefix | typeof Www_Baidu_Com_ApiHost.Const_Prefix
 
 // 根据前端请求的页面前缀, 判断实际需要转发的host值
 function getApiHost(prefix: Type_Prefix) {
     switch (prefix) {
         case A1_Ke_Com_ApiHost.Const_Prefix:
             return A1_Ke_Com_ApiHost.Const_Host;
+        case Www_Baidu_Com_ApiHost.Const_Prefix:
+            return Www_Baidu_Com_ApiHost.Const_Host;
         default:
             return A1_Ke_Com_ApiHost.Const_Host;
     }
@@ -47,6 +52,10 @@ let getAsyncRedirectResponse = (prefix: Type_Prefix) => {
         if (prefix === A1_Ke_Com_ApiHost.Const_Prefix) {
             // a1.ke.com需要在header中额外添加token字段, 以进行权限校验
             headers["a1.ke.com-token"] = token;
+        }
+        if (prefix === Www_Baidu_Com_ApiHost.Const_Prefix) {
+            // 百度接口不需要转发cookie
+            // headers["a1.ke.com-token"] = token;
         }
 
         // 根据传入prefix配置, 解析客户端请求url, 拼接生成实际需要请求的api服务地址
@@ -105,8 +114,17 @@ a1_ke_com_ApiRouter.all(
     getAsyncRedirectResponse(A1_Ke_Com_ApiHost.Const_Prefix)
 );
 
+// baidu服务系列接口
+let www_baidu_com_ApiRouter = new Router();
+www_baidu_com_ApiRouter.all(
+    Www_Baidu_Com_ApiHost.Const_Match_Reg,
+    // 获取baidu服务对应的接口处理函数
+    getAsyncRedirectResponse(Www_Baidu_Com_ApiHost.Const_Prefix)
+);
+
 // 在总路由中注册a1路由
 totalRouter.use(a1_ke_com_ApiRouter.routes());
+totalRouter.use(www_baidu_com_ApiRouter.routes());
 
 // 实际注册中间件服务
 export default (_) => {
