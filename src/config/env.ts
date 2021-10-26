@@ -1,0 +1,1 @@
+export default process.env.NODE_ENV as "local" | "dev" | "test" | "pre" | "prod"
