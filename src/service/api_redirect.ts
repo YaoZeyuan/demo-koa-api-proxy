@@ -9,19 +9,23 @@ import cookie from "cookie";
 
 let http = axios.create()
 
+let apiHostList = [
+    A1_Ke_Com_ApiHost,
+    Ajax_Api_Ke_Com_ApiHost,
+]
+
 // 定义前缀类型列表, 方便后续编写匹配函数
-type Type_Prefix = typeof A1_Ke_Com_ApiHost.Const_Prefix | typeof Ajax_Api_Ke_Com_ApiHost.Const_Prefix
+type Type_Prefix = (typeof apiHostList)[number]['Const_Prefix']
 
 // 根据前端请求的页面前缀, 判断实际需要转发的host值
 function getApiHost(prefix: Type_Prefix) {
-    switch (prefix) {
-        case A1_Ke_Com_ApiHost.Const_Prefix:
-            return A1_Ke_Com_ApiHost.Const_Host;
-        case Ajax_Api_Ke_Com_ApiHost.Const_Prefix:
-            return Ajax_Api_Ke_Com_ApiHost.Const_Host;
-        default:
-            return A1_Ke_Com_ApiHost.Const_Host;
+    for (let config of apiHostList) {
+        if (prefix === config.Const_Prefix) {
+            return config.Const_Host
+        }
     }
+    console.log(`没有找到与${prefix}相匹配的配置项, 返回默认值`)
+    return A1_Ke_Com_ApiHost.Const_Host;
 }
 
 // 包裹一层, 以根据prefix返回对应接口转发函数
@@ -106,25 +110,15 @@ let getAsyncRedirectResponse = (prefix: Type_Prefix) => {
 // 总路由, 接管以api为前缀的网络请求
 let totalRouter = new Router();
 
-// a1服务系列接口
-let a1_ke_com_ApiRouter = new Router();
-a1_ke_com_ApiRouter.all(
-    A1_Ke_Com_ApiHost.Const_Match_Reg,
-    // 获取a1.ke.com服务对应的接口处理函数
-    getAsyncRedirectResponse(A1_Ke_Com_ApiHost.Const_Prefix)
-);
+// 批量注册路由配置
+for (let config of apiHostList) {
+    let router = new Router()
+    // 获取config服务对应的接口处理函数
+    router.all(config.Const_Match_Reg, getAsyncRedirectResponse(config.Const_Prefix))
+    // 在总路由中进行注册
+    totalRouter.use(router.routes());
+}
 
-// ke.com服务系列接口
-let ajax_api_ke_com_ApiRouter = new Router();
-ajax_api_ke_com_ApiRouter.all(
-    Ajax_Api_Ke_Com_ApiHost.Const_Match_Reg,
-    // 获取ke.com服务对应的接口处理函数
-    getAsyncRedirectResponse(Ajax_Api_Ke_Com_ApiHost.Const_Prefix)
-);
-
-// 在总路由中注册a1路由
-totalRouter.use(a1_ke_com_ApiRouter.routes());
-totalRouter.use(ajax_api_ke_com_ApiRouter.routes());
 
 // 添加路由拦截操作
 // 实际注册中间件服务
